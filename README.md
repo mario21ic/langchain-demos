@@ -22,5 +22,6 @@ pip install -r requirements.txt
 
 Ejecutar:
 ```
+export API_KEY=<you-openai-api-key>
 python 1-hello.py
 ```
