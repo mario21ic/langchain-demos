@@ -13,23 +13,30 @@ OPENAI_API_KEY = os.environ['API_KEY']
 MODEL="text-davinci-003"
 llm_openai = OpenAI(model_name=MODEL, openai_api_key=OPENAI_API_KEY)
 
-template_basico = """Eres un asistente virtual culinario que responde a preguntas de manera muy breve.
-Pregunta: Cuales son los ingredientes para preparar {platillo} al estilo {estilo}
-Respuesta:"""
+from langchain import FewShotPromptTemplate
 
-# Construimos el template, especificandole cuales son las variables de entrada y cual es el texto
-prompt_temp = PromptTemplate(input_variables=["platillo", "estilo"], template=template_basico)
+# Lista de ejemplos
+ejemplos = [
+    {"pregunta": "¿Cuál es el ingrediente principal de la pizza?", "respuesta": "La masa y salsa de tomate"},
+    {"pregunta": "¿Cuál es el ingrediente principal de la hamburguesa?", "respuesta": "La carne y el pan"},
+    {"pregunta": "¿Cuál es el ingrediente principal del burrito?", "respuesta": "La tortilla y la carne"}
+]
 
-# Aqui podemos ver como se reemplaza la variable platillo
-#prompt_value = prompt_temp.format(platillo="ceviche", estilo="peruano")
-#prompt_value = prompt_temp.format(platillo="ceviche", estilo="ecuatoriano")
-prompt_value = prompt_temp.format(platillo="mondongo", estilo="peruano")
-#prompt_value = prompt_temp.format(platillo="mondongo", estilo="colombiano")
-#prompt_value = prompt_temp.format(platillo="juane", estilo="norteño")
-print("prompt:", prompt_value)
+# Ahora armamos un template para el modelo
+prompt_temp_ejemplos = PromptTemplate(input_variables=["pregunta", "respuesta"], 
+                                     template = "Pregunta: {pregunta}\nRespuesta: {respuesta}")
 
-# Se puede revisar el nro de tokens de un prompt en especifico
-print("tokens:", llm_openai.get_num_tokens(prompt_value))
+prompt_ejemplos = FewShotPromptTemplate(example_prompt=prompt_temp_ejemplos, 
+                                       examples=ejemplos, 
+                                       prefix = "Eres un asistenet virtual culinario que responde preguntas de manera muy breve",
+                                       suffix = "Pregunta: {pregunta}\nRespuesta:", 
+                                        input_variables=["pregunta"]) 
 
-respuesta_openai = llm_openai(prompt_value)
-print("rpta:", respuesta_openai)
+prompt_value = prompt_ejemplos.format(pregunta="¿Cuál es el ingrediente principal del coctel de camaron?")
+print(prompt_value)
+
+respuesta = llm_openai(prompt_value)
+# respuesta = llm_openai("¿Cuál es el ingrediente principal del coctel de camaron?")
+print(respuesta)
+
+
